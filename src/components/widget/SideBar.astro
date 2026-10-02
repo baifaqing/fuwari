@@ -1,7 +1,9 @@
 ---
 import type { MarkdownHeading } from "astro";
+import Calendar from "./Calendar.astro";
 import Categories from "./Categories.astro";
 import Profile from "./Profile.astro";
+import SiteStats from "./SiteStats.astro";
 import Tag from "./Tags.astro";
 
 interface Props {
@@ -16,7 +18,9 @@ const className = Astro.props.class;
         <Profile></Profile>
     </div>
     <div id="sidebar-sticky" class="transition-all duration-700 flex flex-col w-full gap-4 top-4 sticky top-4">
-        <Categories class="onload-animation" style="animation-delay: 150ms"></Categories>
-        <Tag class="onload-animation" style="animation-delay: 200ms"></Tag>
+        <Calendar class="onload-animation" style="animation-delay: 150ms"></Calendar>
+        <Categories class="onload-animation" style="animation-delay: 200ms"></Categories>
+        <Tag class="onload-animation" style="animation-delay: 250ms"></Tag>
+        <SiteStats class="onload-animation" style="animation-delay: 300ms"></SiteStats>
     </div>
 </div>

@@ -1,0 +1,156 @@
+---
+import { Icon } from "astro-icon/components";
+import I18nKey from "../../i18n/i18nKey";
+import { i18n } from "../../i18n/translation";
+import WidgetLayout from "./WidgetLayout.astro";
+
+interface Props {
+	class?: string;
+	style?: string;
+}
+const className = Astro.props.class;
+const style = Astro.props.style;
+
+const now = new Date();
+const year = now.getFullYear();
+const month = now.getMonth();
+const today = now.getDate();
+
+const monthNames = [
+	"1月",
+	"2月",
+	"3月",
+	"4月",
+	"5月",
+	"6月",
+	"7月",
+	"8月",
+	"9月",
+	"10月",
+	"11月",
+	"12月",
+];
+const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
+
+const firstDay = new Date(year, month, 1).getDay();
+const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+const calendarDays: (number | null)[] = [];
+for (let i = 0; i < firstDay; i++) {
+	calendarDays.push(null);
+}
+for (let i = 1; i <= daysInMonth; i++) {
+	calendarDays.push(i);
+}
+
+// Calculate next solar term (simplified - using common Chinese solar terms)
+function getNextSolarTerm() {
+	const solarTerms = [
+		{ name: "小寒", month: 1, day: 5 },
+		{ name: "大寒", month: 1, day: 20 },
+		{ name: "立春", month: 2, day: 4 },
+		{ name: "雨水", month: 2, day: 19 },
+		{ name: "惊蛰", month: 3, day: 6 },
+		{ name: "春分", month: 3, day: 21 },
+		{ name: "清明", month: 4, day: 5 },
+		{ name: "谷雨", month: 4, day: 20 },
+		{ name: "立夏", month: 5, day: 6 },
+		{ name: "小满", month: 5, day: 21 },
+		{ name: "芒种", month: 6, day: 6 },
+		{ name: "夏至", month: 6, day: 21 },
+		{ name: "小暑", month: 7, day: 7 },
+		{ name: "大暑", month: 7, day: 23 },
+		{ name: "立秋", month: 8, day: 8 },
+		{ name: "处暑", month: 8, day: 23 },
+		{ name: "白露", month: 9, day: 8 },
+		{ name: "秋分", month: 9, day: 23 },
+		{ name: "寒露", month: 10, day: 8 },
+		{ name: "霜降", month: 10, day: 23 },
+		{ name: "立冬", month: 11, day: 8 },
+		{ name: "小雪", month: 11, day: 22 },
+		{ name: "大雪", month: 12, day: 7 },
+		{ name: "冬至", month: 12, day: 22 },
+	];
+
+	const today = new Date();
+	for (const term of solarTerms) {
+		const termDate = new Date(year, term.month - 1, term.day);
+		if (termDate > today) {
+			const diffDays = Math.ceil(
+				(termDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+			);
+			return { name: term.name, days: diffDays };
+		}
+	}
+	// If all terms passed, show first term of next year
+	const firstTerm = solarTerms[0];
+	const nextYearDate = new Date(year + 1, firstTerm.month - 1, firstTerm.day);
+	const diffDays = Math.ceil(
+		(nextYearDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+	);
+	return { name: firstTerm.name, days: diffDays };
+}
+
+const nextTerm = getNextSolarTerm();
+---
+
+<WidgetLayout name={i18n(I18nKey.calendar)} id="calendar" class={className} style={style}>
+    <div class="calendar-container">
+        <!-- Month header -->
+        <div class="flex items-center justify-between mb-3">
+            <button class="calendar-nav-btn p-1 rounded-lg hover:bg-[var(--btn-plain-bg-hover)] transition" onclick="prevMonth()">
+                <Icon name="material-symbols:chevron-left-rounded" class="text-xl text-[var(--primary)]"></Icon>
+            </button>
+            <span class="font-bold text-neutral-900 dark:text-neutral-100">
+                {year}年{monthNames[month]}
+            </span>
+            <button class="calendar-nav-btn p-1 rounded-lg hover:bg-[var(--btn-plain-bg-hover)] transition" onclick="nextMonth()">
+                <Icon name="material-symbols:chevron-right-rounded" class="text-xl text-[var(--primary)]"></Icon>
+            </button>
+        </div>
+
+        <!-- Week days header -->
+        <div class="grid grid-cols-7 gap-1 mb-2">
+            {weekDays.map((day) => (
+                <div class="text-center text-xs text-neutral-500 dark:text-neutral-400 font-medium py-1">
+                    {day}
+                </div>
+            ))}
+        </div>
+
+        <!-- Calendar grid -->
+        <div class="grid grid-cols-7 gap-1" id="calendar-grid">
+            {calendarDays.map((day) => (
+                <div class:list={[
+                    "calendar-day text-center text-sm py-1 rounded-lg transition",
+                    day === today
+                        ? "bg-[var(--primary)] text-white font-bold"
+                        : day === null
+                            ? ""
+                            : "text-neutral-700 dark:text-neutral-300 hover:bg-[var(--btn-plain-bg-hover)]"
+                ]}>
+                    {day}
+                </div>
+            ))}
+        </div>
+
+        <!-- Solar term countdown -->
+        <div class="mt-4 pt-3 border-t border-[var(--line-divider)] dark:border-[var(--line-divider-dark)]">
+            <div class="flex items-center gap-2 text-sm">
+                <Icon name="material-symbols:celebration-rounded" class="text-[var(--primary)]"></Icon>
+                <span class="text-neutral-600 dark:text-neutral-400">
+                    距离 <span class="text-[var(--primary)] font-medium">{nextTerm.name}</span> 还有 <span class="text-[var(--primary)] font-bold">{nextTerm.days}</span> 天
+                </span>
+            </div>
+        </div>
+    </div>
+</WidgetLayout>
+
+<style>
+    .calendar-day {
+        min-height: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>

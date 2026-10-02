@@ -32,6 +32,17 @@ enum I18nKey {
 	author = "author",
 	publishedAt = "publishedAt",
 	license = "license",
+
+	calendar = "calendar",
+	siteStats = "siteStats",
+	runtime = "runtime",
+	todayVisits = "todayVisits",
+	totalVisitors = "totalVisitors",
+	totalVisits = "totalVisits",
+	wordCountTotal = "wordCountTotal",
+	postCountTotal = "postCountTotal",
+	categoryCount = "categoryCount",
+	tagCount = "tagCount",
 }
 
 export default I18nKey;

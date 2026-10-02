@@ -1,0 +1,155 @@
+---
+import { Icon } from "astro-icon/components";
+import I18nKey from "../../i18n/i18nKey";
+import { i18n } from "../../i18n/translation";
+import { getCategoryList, getSortedPostsList, getTagList } from "../../utils/content-utils";
+import WidgetLayout from "./WidgetLayout.astro";
+
+interface Props {
+	class?: string;
+	style?: string;
+}
+const className = Astro.props.class;
+const style = Astro.props.style;
+
+const posts = await getSortedPostsList();
+const categories = await getCategoryList();
+const tags = await getTagList();
+
+const postCount = posts.length;
+const categoryCount = categories.length;
+const tagCount = tags.length;
+
+// Calculate total word count from all posts
+let totalWordCount = 0;
+posts.forEach((post) => {
+	if (post.data.title) {
+		totalWordCount += post.data.title.length;
+	}
+	// Note: Full content word count requires post body which isn't available in list view
+	// Using title as approximation, or we could fetch full posts
+});
+
+// Site start date - starts from now (when page is built/rendered)
+const siteStartDate = new Date();
+const now = new Date();
+const diffTime = now.getTime() - siteStartDate.getTime();
+const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+const years = Math.floor(diffDays / 365);
+const remainingDays = diffDays % 365;
+const hours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+const minutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
+const seconds = Math.floor((diffTime % (1000 * 60)) / 1000);
+
+let runtimeText = "";
+if (years > 0) {
+	runtimeText = `${years}年 ${remainingDays}天 ${hours}时 ${minutes}分 ${seconds}秒`;
+} else {
+	runtimeText = `${diffDays}天 ${hours}时 ${minutes}分 ${seconds}秒`;
+}
+
+const startTimestamp = siteStartDate.getTime();
+---
+
+<WidgetLayout name={i18n(I18nKey.siteStats)} id="site-stats" class={className} style={style}>
+    <div class="flex flex-col gap-3">
+        <!-- Runtime -->
+        <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg bg-[var(--btn-regular-bg)] flex items-center justify-center shrink-0 mt-0.5">
+                <Icon name="material-symbols:timer-outline-rounded" class="text-[var(--btn-content)]"></Icon>
+            </div>
+            <div class="flex-1">
+                <div class="text-xs text-neutral-500 dark:text-neutral-400">已运行</div>
+                <div class="text-sm font-medium text-neutral-900 dark:text-neutral-100 runtime-text" data-start={String(startTimestamp)}>
+                    {runtimeText}
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's visits (placeholder) -->
+        <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg bg-[var(--btn-regular-bg)] flex items-center justify-center shrink-0 mt-0.5">
+                <Icon name="material-symbols:today-outline-rounded" class="text-[var(--btn-content)]"></Icon>
+            </div>
+            <div class="flex-1">
+                <div class="text-xs text-neutral-500 dark:text-neutral-400">今日访问</div>
+                <div class="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                    <span id="busuanzi_value_site_uv" class="busuanzi">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total visitors -->
+        <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg bg-[var(--btn-regular-bg)] flex items-center justify-center shrink-0 mt-0.5">
+                <Icon name="material-symbols:group-outline-rounded" class="text-[var(--btn-content)]"></Icon>
+            </div>
+            <div class="flex-1">
+                <div class="text-xs text-neutral-500 dark:text-neutral-400">总访客</div>
+                <div class="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                    <span id="busuanzi_value_site_pv" class="busuanzi">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total visits -->
+        <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg bg-[var(--btn-regular-bg)] flex items-center justify-center shrink-0 mt-0.5">
+                <Icon name="material-symbols:trending-up-rounded" class="text-[var(--btn-content)]"></Icon>
+            </div>
+            <div class="flex-1">
+                <div class="text-xs text-neutral-500 dark:text-neutral-400">总访问</div>
+                <div class="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                    <span id="busuanzi_value_page_pv" class="busuanzi">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="border-t border-[var(--line-divider)] dark:border-[var(--line-divider-dark)] my-1"></div>
+
+        <!-- Grid stats -->
+        <div class="grid grid-cols-2 gap-3">
+            <div class="text-center">
+                <div class="text-xs text-neutral-500 dark:text-neutral-400">文章字数</div>
+                <div class="text-sm font-bold text-[var(--primary)]">{totalWordCount.toLocaleString()}</div>
+            </div>
+            <div class="text-center">
+                <div class="text-xs text-neutral-500 dark:text-neutral-400">文章数量</div>
+                <div class="text-sm font-bold text-[var(--primary)]">{postCount}</div>
+            </div>
+            <div class="text-center">
+                <div class="text-xs text-neutral-500 dark:text-neutral-400">分类</div>
+                <div class="text-sm font-bold text-[var(--primary)]">{categoryCount}</div>
+            </div>
+            <div class="text-center">
+                <div class="text-xs text-neutral-500 dark:text-neutral-400">标签</div>
+                <div class="text-sm font-bold text-[var(--primary)]">{tagCount}</div>
+            </div>
+        </div>
+    </div>
+</WidgetLayout>
+
+<script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script>
+
+<script>
+    // Real-time runtime counter
+    function updateRuntime() {
+        const el = document.querySelector('.runtime-text');
+        if (!el) return;
+        const startTimestamp = parseInt(el.getAttribute('data-start') || '0', 10);
+        if (!startTimestamp) return;
+        const now = new Date().getTime();
+        const diff = now - startTimestamp;
+        
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        el.textContent = `${days}天 ${hours}时 ${minutes}分 ${seconds}秒`;
+    }
+    
+    setInterval(updateRuntime, 1000);
+    updateRuntime();
+</script>
